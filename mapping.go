@@ -1,57 +1,47 @@
-//  Copyright (c) 2014 Couchbase, Inc.
-//  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
-//  except in compliance with the License. You may obtain a copy of the License at
-//    http://www.apache.org/licenses/LICENSE-2.0
-//  Unless required by applicable law or agreed to in writing, software distributed under the
-//  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-//  either express or implied. See the License for the specific language governing permissions
-//  and limitations under the License.
-
-// +build !example1
-// +build !example2
-
 package main
 
 import (
+	"fmt"
+
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/ta"
 	"github.com/blevesearch/bleve/mapping"
 )
 
+// "bookno": 1,
+// "chapter": 1,
+// "bookname": "முதற்கனல்",
+// "sectionno": 1,
+// "sectionname": "பகுதி ஒன்று : வேள்விமுகம்",
+// "published_on": "01-01-2014",
+
 func buildIndexMapping() (mapping.IndexMapping, error) {
 
-	// a generic reusable mapping for english text
-	englishTextFieldMapping := bleve.NewTextFieldMapping()
-	englishTextFieldMapping.Analyzer = ta.AnalyzerName
+	// a generic reusable mapping for tamil text
+	tamilTextFieldMapping := bleve.NewTextFieldMapping()
+	tamilTextFieldMapping.Analyzer = ta.AnalyzerName
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
 
+	datetimeFieldMapping := bleve.NewDateTimeFieldMapping()
+
 	beerMapping := bleve.NewDocumentMapping()
 
-	// name
-	beerMapping.AddFieldMappingsAt("name", englishTextFieldMapping)
-
-	// description
-	beerMapping.AddFieldMappingsAt("description",
-		englishTextFieldMapping)
-
-	beerMapping.AddFieldMappingsAt("type", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("style", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("category", keywordFieldMapping)
-
-	breweryMapping := bleve.NewDocumentMapping()
-	breweryMapping.AddFieldMappingsAt("name", englishTextFieldMapping)
-	breweryMapping.AddFieldMappingsAt("description", englishTextFieldMapping)
+	beerMapping.AddFieldMappingsAt("bookno", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("chapter", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("bookname", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("sectionno", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("sectionname", keywordFieldMapping)
+	beerMapping.AddFieldMappingsAt("published_on", datetimeFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("beer", beerMapping)
-	indexMapping.AddDocumentMapping("brewery", breweryMapping)
 
 	indexMapping.TypeField = "type"
-	indexMapping.DefaultAnalyzer = "en"
-
+	indexMapping.DefaultAnalyzer = "ta"
+	fmt.Printf("IndexMappingImpl===>%+v", indexMapping)
 	return indexMapping, nil
 }

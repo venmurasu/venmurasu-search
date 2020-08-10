@@ -25,12 +25,13 @@ import (
 
 	"github.com/blevesearch/bleve"
 	bleveHttp "github.com/blevesearch/bleve/http"
+	"github.com/blevesearch/bleve/index/scorch"
 )
 
-var batchSize = flag.Int("batchSize", 100, "batch size for indexing")
+var batchSize = flag.Int("batchSize", 150, "batch size for indexing")
 var bindAddr = flag.String("addr", ":8094", "http listen address")
-var jsonDir = flag.String("jsonDir", "/Users/mahendra/products/venmurasu/venmurasu-source/content/bleve_data/", "json directory")
-var indexPath = flag.String("index", "venmurasu-search.bleve", "index path")
+var jsonDir = flag.String("jsonDir", "./data", "json directory")
+var indexPath = flag.String("index", "vensearch.bleve", "index path")
 var staticEtag = flag.String("staticEtag", "", "A static etag value.")
 var staticPath = flag.String("static", "static/", "Path to the static content")
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
@@ -59,7 +60,12 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		beerIndex, err = bleve.New(*indexPath, indexMapping)
+		//beerIndex, err = bleve.New(*indexPath, indexMapping)
+		beerIndex, err := bleve.NewUsing(*indexPath, indexMapping, scorch.Name, scorch.Name, map[string]interface{}{
+			"forceSegmentType":    "zap",
+			"forceSegmentVersion": 12,
+		})
+
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,7 +98,13 @@ func main() {
 	// add the API
 	bleveHttp.RegisterIndexName("beer", beerIndex)
 	searchHandler := bleveHttp.NewSearchHandler("beer")
+	commonSearchHandler := bleveHttp.NewSearchHandler("beer")
+
+	// stylesFacet := bleve.NewFacetRequest("bookname", 10)
+	// searchRequest.AddFacet("bookname", stylesFacet)
+
 	router.Handle("/api/search", searchHandler).Methods("POST")
+	router.Handle("/api/vensearch", commonSearchHandler).Methods("POST")
 	listFieldsHandler := bleveHttp.NewListFieldsHandler("beer")
 	router.Handle("/api/fields", listFieldsHandler).Methods("GET")
 
@@ -123,7 +135,7 @@ func indexBeer(i bleve.Index) error {
 	batchCount := 0
 	for _, dirEntry := range dirEntries {
 		filename := dirEntry.Name()
-		fmt.Println("Indexing file==>", *jsonDir+"/"+filename)
+
 		// read the bytes
 		jsonBytes, err := ioutil.ReadFile(*jsonDir + "/" + filename)
 		if err != nil {
@@ -135,8 +147,10 @@ func indexBeer(i bleve.Index) error {
 		if err != nil {
 			return err
 		}
+
 		ext := filepath.Ext(filename)
 		docID := filename[:(len(filename) - len(ext))]
+		fmt.Println("Indexing docid==>", docID)
 		batch.Index(docID, jsonDoc)
 		batchCount++
 
@@ -149,7 +163,7 @@ func indexBeer(i bleve.Index) error {
 			batchCount = 0
 		}
 		count++
-		if count%1000 == 0 {
+		if count%10 == 0 {
 			indexDuration := time.Since(startTime)
 			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
 			timePerDoc := float64(indexDuration) / float64(count)
