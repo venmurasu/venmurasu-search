@@ -19,6 +19,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -36,7 +37,7 @@ import (
 
 var batchSize = flag.Int("batchSize", 150, "batch size for indexing")
 var bindAddr = flag.String("addr", ":8094", "http listen address")
-var jsonDir = flag.String("jsonDir", "./data", "json directory")
+var jsonDir = flag.String("jsonDir", "/Users/mahendra/products/venmurasu/venmurasu-source/content/bleve_data", "json directory")
 var indexPath = flag.String("index", "vensearch.bleve", "index path")
 var staticEtag = flag.String("staticEtag", "", "A static etag value.")
 var staticPath = flag.String("static", "static/", "Path to the static content")
@@ -111,6 +112,12 @@ func main() {
 
 	// create a router to serve static files
 
+	// workDir, _ := os.Getwd()
+	// filesDir := http.Dir(filepath.Join(workDir, "static"))
+
+	FileServer(r, "/static", "./static/")
+	//FileServer(r, "/", "/static/")
+
 	// add the API
 	bleveHttp.RegisterIndexName("venmurasu", venmurasuIndex)
 	searchHandler := bleveHttp.NewSearchHandler("venmurasu")
@@ -182,7 +189,7 @@ func searchParams(next http.Handler) http.Handler {
 		fmt.Println("sourcesourcesource==>", source)
 
 		if strings.Contains(source, "tags:") {
-			tagsre := regexp.MustCompile(`(?P<tags>tags:.*?\b)`)
+			tagsre := regexp.MustCompile(`(?P<tags>tags:(.*\b?))`)
 
 			tag = strings.Replace(tagsre.FindStringSubmatch(source)[0], "tags:", "", 1)
 
@@ -193,12 +200,14 @@ func searchParams(next http.Handler) http.Handler {
 			}`)
 
 		}
-		if strings.Contains(source, "search:") {
+		if strings.Contains(source, "search:") || !strings.Contains(source, ":") {
 			searchre := regexp.MustCompile(`(?P<search>search:'(.*?)')`)
 
-			fmt.Println(searchre.FindStringSubmatch(source)[0])
-			search = strings.Replace(strings.Replace(searchre.FindStringSubmatch(source)[0], "search:", "", 1), "'", "", 2)
-
+			if len(searchre.FindStringSubmatch(source)) > 0 {
+				search = strings.Replace(strings.Replace(searchre.FindStringSubmatch(source)[0], "search:", "", 1), "'", "", 2)
+			} else {
+				search = strings.Replace(strings.Replace(source, "'", "", 2), "\"", "", 2)
+			}
 			searchQry = append(searchQry, `{                
                 "match_phrase": "`+search+`"  ,
 				"field": "_all",
@@ -206,9 +215,10 @@ func searchParams(next http.Handler) http.Handler {
             }`)
 		}
 		if strings.Contains(source, "bookno:") {
-			booknore := regexp.MustCompile(`(?P<bookno>bookno:.*?\b)`)
-			fmt.Println(booknore.FindStringSubmatch(source)[0])
-			bookno = strings.Replace(booknore.FindStringSubmatch(source)[0], "bookno:", "", 1)
+			booknore := regexp.MustCompile(`(?P<bookno>bookno:(.*\b?))`)
+			if len(booknore.FindStringSubmatch(source)) > 0 {
+				bookno = strings.Replace(booknore.FindStringSubmatch(source)[0], "bookno:", "", 1)
+			}
 			searchQry = append(searchQry, `{
 				"term": "`+strings.TrimRight(bookno, " ")+`",
 				"field": "bookno",
@@ -216,9 +226,10 @@ func searchParams(next http.Handler) http.Handler {
 			}`)
 		}
 		if strings.Contains(source, "bookname:") {
-			booknamere := regexp.MustCompile(`(?P<bookname>bookname:)`)
-			fmt.Println(booknamere.FindStringSubmatch(source)[0])
-			bookname = strings.Replace(booknamere.FindStringSubmatch(source)[0], "bookname:", "", 1)
+			booknamere := regexp.MustCompile(`(?P<bookname>bookname:(.*\b?))`)
+			if len(booknamere.FindStringSubmatch(source)) > 0 {
+				bookname = strings.Replace(booknamere.FindStringSubmatch(source)[0], "bookname:", "", 1)
+			}
 			searchQry = append(searchQry, `{
 				"term": "`+strings.TrimRight(bookname, " ")+`",
 				"field": "bookname",
@@ -229,55 +240,10 @@ func searchParams(next http.Handler) http.Handler {
 		fmt.Println(tag, search, bookno, bookname)
 		searchQryFinal := strings.Join(searchQry, ",")
 
-		// {
-		// 	"query": {
-		// 	  "must": {
-		// 		"conjuncts": [
-		// 		  {
-		// 			"term": "1",
-		// 			"field": "bookno",
-		// 			"boost": 1
-		// 		  },
-		// 				  {
-		// 			"match": "ஜனமேஜயன்",
-		// 			"field": "_all",
-		// 			"boost": 1
-		// 		  }
-
-		// 		],
-		// 		"boost": 1
-		// 	  },
-		// 	  "boost": 1
-		// 	},
-		// 	"highlight": {},
-		// 	"size": 10
-		//   }
-
-		// {
-		// 	"query": {
-		// 	  "must": {
-		// 		"conjuncts": [
-		// 		  {
-		// 			"term": "1",
-		// 			"field": "bookno"
-		// 		  },
-		// 		 {
-		// 			"match": "ஜனமேஜயன்",
-		// 			"field": "_all"
-		// 		  }
-
-		// 		]
-
-		// 	  }
-
-		// 	},
-		// 	"highlight": {},
-		// 	"size": 10
-		//   }
-
 		qry :=
 			fmt.Sprintf(`{
 			"from": %d,
+			"explain": true,
 			"size": %d,	
 			"query": {
 			  "must": {
@@ -286,7 +252,9 @@ func searchParams(next http.Handler) http.Handler {
 				] 
 			  } 
 			},
-			"highlight": {}
+			"highlight": {},
+			"fields": ["bookno", "chapter", "bookname", "sectionno", "sectionname", "published_on" ]
+
 		  }`, from, size, searchQryFinal)
 		fmt.Println("Search query===>", qry)
 
@@ -390,4 +358,32 @@ func indexVenmurasu(i bleve.Index) error {
 	timePerDoc := float64(indexDuration) / float64(count)
 	log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
 	return nil
+}
+
+func FileServer(r chi.Router, public string, static string) {
+
+	if strings.ContainsAny(public, "{}*") {
+		panic("FileServer does not permit URL parameters.")
+	}
+
+	root, _ := filepath.Abs(static)
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		panic("Static Documents Directory Not Found")
+	}
+
+	fs := http.StripPrefix(public, http.FileServer(http.Dir(root)))
+
+	if public != "/" && public[len(public)-1] != '/' {
+		r.Get(public, http.RedirectHandler(public+"/", 301).ServeHTTP)
+		public += "/"
+	}
+
+	r.Get(public+"*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		file := strings.Replace(r.RequestURI, public, "/", 1)
+		if _, err := os.Stat(root + file); os.IsNotExist(err) {
+			http.ServeFile(w, r, path.Join(root, "index.html"))
+			return
+		}
+		fs.ServeHTTP(w, r)
+	}))
 }

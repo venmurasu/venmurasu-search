@@ -28,17 +28,17 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 
 	datetimeFieldMapping := bleve.NewDateTimeFieldMapping()
 
-	beerMapping := bleve.NewDocumentMapping()
+	venMapping := bleve.NewDocumentMapping()
 
-	beerMapping.AddFieldMappingsAt("bookno", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("chapter", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("bookname", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("sectionno", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("sectionname", keywordFieldMapping)
-	beerMapping.AddFieldMappingsAt("published_on", datetimeFieldMapping)
+	venMapping.AddFieldMappingsAt("bookno", keywordFieldMapping)
+	venMapping.AddFieldMappingsAt("chapter", keywordFieldMapping)
+	venMapping.AddFieldMappingsAt("bookname", keywordFieldMapping)
+	venMapping.AddFieldMappingsAt("sectionno", keywordFieldMapping)
+	venMapping.AddFieldMappingsAt("sectionname", keywordFieldMapping)
+	venMapping.AddFieldMappingsAt("published_on", datetimeFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping("beer", beerMapping)
+	indexMapping.AddDocumentMapping("beer", venMapping)
 
 	indexMapping.TypeField = "type"
 	indexMapping.DefaultAnalyzer = "ta"

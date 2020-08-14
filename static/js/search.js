@@ -121,17 +121,11 @@ function SearchCtrl($scope, $http, $routeParams, $log, $sce) {
 
     $scope.searchMatch = function() {
         $http.post('/api/search', {
+            "from": 0,
             "size": 10,
-            "explain": true,
-            "highlight":{},
-            "query": {
-                "boost": 1.0,
-                "match": $scope.match,
-                "field": $scope.field,
-                "prefix_length": parseInt($scope.prefix_length,10),
-                "fuzziness": parseInt($scope.fuzziness,10)
+            "match": $scope.match
             }
-        }).
+        ).
         success(function(data) {
             $scope.processResults(data);
         }).
@@ -142,15 +136,11 @@ function SearchCtrl($scope, $http, $routeParams, $log, $sce) {
 
     $scope.searchMatchPhrase = function() {
         $http.post('/api/search', {
+            "from": 0,
             "size": 10,
-            "explain": true,
-            "highlight":{},
-            "query": {
-                "boost": 1.0,
-                "match_phrase": $scope.matchphrase,
-                "field": $scope.field,
+            "search": $scope.matchphrase,
             }
-        }).
+        ).
         success(function(data) {
             $scope.processResults(data);
         }).
@@ -228,7 +218,7 @@ function SearchCtrl($scope, $http, $routeParams, $log, $sce) {
         for(var i in $scope.results.hits) {
                 hit = $scope.results.hits[i];
                 hit.roundedScore = $scope.roundScore(hit.score);
-                hit.explanationString = $scope.expl(hit.explanation);
+                //hit.explanationString = $scope.expl(hit.explanation);
                 hit.explanationStringSafe = $sce.trustAsHtml(hit.explanationString);
                 for(var ff in hit.fragments) {
                     fragments = hit.fragments[ff];
