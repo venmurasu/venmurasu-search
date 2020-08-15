@@ -37,5 +37,7 @@ The application has REST API for integration with other applications.
 
 ```
 POST /api/search  
-Request JSON: { "size": 2 , "from":5, "search": "search:'இளைய யாதவர்'"}
+Request JSON: { "size": 10 , "from":0, "search": "search:'இளைய யாதவர்'"}
 ```
+Where `size` -> no. of results
+       `from` -> Offset, used for pagination, for next page, offset by the size * no. of pages (e.g., For page 2, from -> 20)
