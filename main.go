@@ -62,7 +62,8 @@ func main() {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hi"))
+		//w.Write([]byte("hi"))
+		http.Redirect(w, r, "/static/index.html", http.StatusMovedPermanently)
 	})
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
@@ -116,6 +117,7 @@ func main() {
 	// filesDir := http.Dir(filepath.Join(workDir, "static"))
 
 	FileServer(r, "/static", "./static/")
+	//FileServer(r, "/static", "./static/")
 	//FileServer(r, "/", "/static/")
 
 	// add the API
@@ -190,9 +192,9 @@ func searchParams(next http.Handler) http.Handler {
 
 		if strings.Contains(source, "tags:") {
 			tagsre := regexp.MustCompile(`(?P<tags>tags:(.*\b?))`)
-
-			tag = strings.Replace(tagsre.FindStringSubmatch(source)[0], "tags:", "", 1)
-
+			if len(tagsre.FindStringSubmatch(source)) > 0 {
+				tag = strings.Replace(tagsre.FindStringSubmatch(source)[0], "tags:", "", 1)
+			}
 			searchQry = append(searchQry, `{
 				"term": "`+strings.TrimRight(tag, " ")+`",
 				"field": "tags",
@@ -203,7 +205,7 @@ func searchParams(next http.Handler) http.Handler {
 		if strings.Contains(source, "search:") || !strings.Contains(source, ":") {
 			searchre := regexp.MustCompile(`(?P<search>search:'(.*?)')`)
 
-			if len(searchre.FindStringSubmatch(source)) > 0 {
+			if strings.Contains(source, "search:") {
 				search = strings.Replace(strings.Replace(searchre.FindStringSubmatch(source)[0], "search:", "", 1), "'", "", 2)
 			} else {
 				search = strings.Replace(strings.Replace(source, "'", "", 2), "\"", "", 2)
@@ -253,7 +255,7 @@ func searchParams(next http.Handler) http.Handler {
 			  } 
 			},
 			"highlight": {},
-			"fields": ["bookno", "chapter", "bookname", "sectionno", "sectionname", "published_on" ]
+			"fields": ["bookno", "chapter", "bookname", "sectionno", "sectionname", "published_on" , "book"]
 
 		  }`, from, size, searchQryFinal)
 		fmt.Println("Search query===>", qry)
