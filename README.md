@@ -30,3 +30,12 @@ start the app from
 ./venmurasu-search
 ```
 First run should build the index and start the app and is accessible from `http://localhost:8094`
+
+## REST API
+
+The application has REST API for integration with other applications.
+
+```
+POST /api/search  
+Request JSON: { "size": 2 , "from":5, "search": "search:'இளைய யாதவர்'"}
+```
