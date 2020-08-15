@@ -1,18 +1,24 @@
-<h1 class="page-header">Match Phrase Search</h1>
+<h1 class="page-header">Venmurasu Search</h1>
+<script>
+function gethref() {
+return "https://jeyamohan.in"
 
+}
+</script>
+        
 <form class="form-horizontal" role="form">
-        <div class="form-group">
+        <!-- <div class="form-group">
                 <label for="inputField" class="col-sm-2 control-label">Field</label>
                 <div class="col-sm-10">
                     <select ng-model="field" id="inputField" class="form-control">
                             <option ng-repeat="fn in fieldNames">{{fn}}</option>
                     </select>
                 </div>
-        </div>
+        </div> -->
         <div class="form-group">
-                <label for="inputName" class="col-sm-2 control-label">Match Phrase</label>
+                <label for="inputName" class="col-sm-2 control-label">Enter Search Term(s)</label>
                 <div class="col-sm-10">
-                        <input ng-model="matchphrase" type="text" class="form-control" id="searchTerm" placeholder="Term">
+                        <input ng-model="matchphrase" type="text" class="form-control" id="searchTerm" placeholder="tags:   search:'' bookname: ">
                 </div>
         </div>
         <div class="form-group">
