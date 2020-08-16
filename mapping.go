@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/custom"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/ta"
+	"github.com/blevesearch/bleve/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/mapping"
 )
 
@@ -41,8 +43,23 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 	indexMapping := bleve.NewIndexMapping()
 	indexMapping.AddDocumentMapping("venmurasu", venMapping)
 
+	var err error
+	err = indexMapping.AddCustomAnalyzer("customta",
+		map[string]interface{}{
+			"type":      custom.Name,
+			"tokenizer": unicode.Name,
+			"token_filters": []interface{}{
+				ta.StopName,
+				ta.SnowballStemmerName,
+				`normalize_in`,
+			},
+		})
+	if err != nil {
+		return nil, err
+	}
+
 	indexMapping.TypeField = "type"
-	indexMapping.DefaultAnalyzer = "ta"
+	indexMapping.DefaultAnalyzer = "customta"
 	fmt.Printf("IndexMappingImpl===>%+v", indexMapping)
 	return indexMapping, nil
 }
