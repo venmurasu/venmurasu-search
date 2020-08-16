@@ -1,5 +1,5 @@
 # Venmurasu-search
-** Alpha Status **
+** Beta **
 
 A sample application showing Venmurasu Search functionality.
 
@@ -22,6 +22,10 @@ go mod init
 then
 ```
 go build
+```
+Go supports cross compilation, if you want to build executable for linux from Mac or windows, then
+```
+env GOOS=linux GOARCH=amd64 go build
 ```
 In the `main.go` code, point the JSON files from https://github.com/venmurasu/venmurasu-source/tree/search-source/content/bleve_data
 
