@@ -5,5 +5,6 @@
 .project
 .settings
 .DS_Store
-/beer-search
-/beer-search.bleve
+/vensearch.bleve/store
+vensearch.bleve/store
+vensearch.bleve/store/root.bolt

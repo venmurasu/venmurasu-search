@@ -37,7 +37,7 @@ import (
 
 var batchSize = flag.Int("batchSize", 150, "batch size for indexing")
 var bindAddr = flag.String("addr", ":8094", "http listen address")
-var jsonDir = flag.String("jsonDir", "/Users/mahendra/products/venmurasu/venmurasu-source/content/bleve_data", "json directory")
+var jsonDir = flag.String("jsonDir", "/Users/mahendra/products/venmurasu/bleve_data", "json directory")
 var indexPath = flag.String("index", "vensearch.bleve", "index path")
 var staticEtag = flag.String("staticEtag", "", "A static etag value.")
 var staticPath = flag.String("static", "static/", "Path to the static content")
