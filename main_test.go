@@ -17,8 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 )
+
+const data_dir = "data/venmurasu-json/"
 
 func TestBeerSearchAll(t *testing.T) {
 	defer os.RemoveAll("beer-search-test.bleve")
@@ -34,7 +36,7 @@ func TestBeerSearchAll(t *testing.T) {
 	defer index.Close()
 
 	// open the directory
-	dirEntries, err := ioutil.ReadDir("data/")
+	dirEntries, err := ioutil.ReadDir(data_dir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +47,7 @@ func TestBeerSearchAll(t *testing.T) {
 	for _, dirEntry := range dirEntries {
 		filename := dirEntry.Name()
 		// read the bytes
-		jsonBytes, err := ioutil.ReadFile("data/" + filename)
+		jsonBytes, err := ioutil.ReadFile(data_dir + filename)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -223,14 +225,14 @@ func TestBeerSearchBug87(t *testing.T) {
 	// start indexing documents in the background
 	go func() {
 		// open the directory
-		dirEntries, err := ioutil.ReadDir("data/")
+		dirEntries, err := ioutil.ReadDir(data_dir)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		for _, dirEntry := range dirEntries {
 			filename := dirEntry.Name()
-			jsonBytes, err := ioutil.ReadFile("data/" + filename)
+			jsonBytes, err := ioutil.ReadFile(data_dir + filename)
 			if err != nil {
 				t.Fatal(err)
 			}

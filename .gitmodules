@@ -1,0 +1,3 @@
+[submodule "venmurasu-data"]
+	path = data
+	url = git@github.com:venmurasu-programming-team/venmurasu-data.git

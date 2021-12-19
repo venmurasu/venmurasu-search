@@ -5,6 +5,9 @@
 .project
 .settings
 .DS_Store
+.makefiles
+venmurasu-search
+/bin
 /vensearch.bleve/store
 vensearch.bleve/store
 vensearch.bleve/store/root.bolt
