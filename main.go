@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blevesearch/bleve"
-	bleveHttp "github.com/blevesearch/bleve/http"
-	"github.com/blevesearch/bleve/index/scorch"
+	"github.com/blevesearch/bleve/v2"
+	bleveHttp "github.com/blevesearch/bleve/v2/http"
+	"github.com/blevesearch/bleve/v2/index/scorch"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -210,7 +210,7 @@ func searchParams(next http.Handler) http.Handler {
 			} else {
 				search = strings.Replace(strings.Replace(source, "'", "", 2), "\"", "", 2)
 			}
-			searchQry = append(searchQry, `{                
+			searchQry = append(searchQry, `{
                 "match_phrase": "`+search+`"  ,
 				"field": "_all",
 				"boost":1
@@ -246,13 +246,13 @@ func searchParams(next http.Handler) http.Handler {
 			fmt.Sprintf(`{
 			"from": %d,
 			"explain": true,
-			"size": %d,	
+			"size": %d,
 			"query": {
 			  "must": {
-				"conjuncts": [   
+				"conjuncts": [
 				%s
-				] 
-			  } 
+				]
+			  }
 			},
 			"highlight": {},
 			"fields": ["bookno", "chapter", "bookname", "sectionno", "sectionname", "published_on" , "book"]
