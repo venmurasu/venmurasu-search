@@ -79,7 +79,7 @@ func TestBeerSearchAll(t *testing.T) {
 		}
 	}
 
-	expectedCount := uint64(7303)
+	expectedCount := uint64(1926)
 	actualCount, err := index.DocCount()
 	if err != nil {
 		t.Error(err)

@@ -9,38 +9,56 @@ Uses Blevesearch library
 ## Installation
 
 
-Install Go using [the instructions](https://golang.org/doc/install). This application requires Go 1.13 or above.
+Install Go using [the instructions](https://golang.org/doc/install). This application requires Go 1.14 or above.
 
-After installing Go, run the following commands to download and install:
+After installing Go, Then clone this repo.
 
-```shell
-go get github.com/venmurasu/venmurasu-search
+### To generate bleve index
 
-go mod init
+To generate bleve index file from the venmurasu json directory.
 
 ```
-then
+make genindex
 ```
-go build
+
+The index directory is required to run the search web server.
+
+### To build binary
+
 ```
+make
+```
+
 Go supports cross compilation, if you want to build executable for linux from Mac or windows, then
+
 ```
-env GOOS=linux GOARCH=amd64 go build
+env GOOS=linux GOARCH=amd64 go build -o bin/server-amd64 *.go
 ```
-In the `main.go` code, point the JSON files from https://github.com/venmurasu/venmurasu-source/tree/search-source/content/bleve_data
+
+### To run the server
 
 start the app from
+
 ```
-./venmurasu-search
+make run
 ```
 First run should build the index and start the app and is accessible from `http://localhost:8094`
+
+### To run as docker
+
+```
+docker-compose up -d
+```
+
+docker expectes mounting the index directory.
+
 
 ## REST API
 
 The application has REST API for integration with other applications.
 
 ```
-POST /api/search  
+POST /api/search
 Request JSON: { "size": 10 , "from":0, "search": "search:'இளைய யாதவர்'"}
 ```
 Where `size` -> no. of results

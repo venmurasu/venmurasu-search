@@ -22,47 +22,30 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
-	"runtime/pprof"
 	"strings"
-	"time"
 
 	"github.com/blevesearch/bleve/v2"
 	bleveHttp "github.com/blevesearch/bleve/v2/http"
-	"github.com/blevesearch/bleve/v2/index/scorch"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
 
-var batchSize = flag.Int("batchSize", 150, "batch size for indexing")
-var bindAddr = flag.String("addr", ":8094", "http listen address")
-var jsonDir = flag.String("jsonDir", "/Users/mahendra/products/venmurasu/bleve_data", "json directory")
-var indexPath = flag.String("index", "vensearch.bleve", "index path")
-var staticEtag = flag.String("staticEtag", "", "A static etag value.")
-var staticPath = flag.String("static", "static/", "Path to the static content")
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-var memprofile = flag.String("memprofile", "", "write mem profile to file")
-
+// Start the web server for search.
 func main() {
+
+	var bindAddr = flag.String("addr", "0.0.0.0:8094", "http listen address")
+	var indexPath = flag.String("index", "vensearch.bleve", "index path")
+	// var staticEtag = flag.String("staticEtag", "", "A static etag value.")
+	var staticPath = flag.String("static", "/app/static/", "Path to the static content")
 
 	flag.Parse()
 
-	log.Printf("GOMAXPROCS: %d", runtime.GOMAXPROCS(-1))
-
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-	}
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		//w.Write([]byte("hi"))
 		http.Redirect(w, r, "/static/index.html", http.StatusMovedPermanently)
 	})
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -72,51 +55,20 @@ func main() {
 	//open the index
 	venmurasuIndex, err := bleve.Open(*indexPath)
 
-	if err == bleve.ErrorIndexPathDoesNotExist {
-		log.Printf("Creating new index...")
-		// create a mapping
-		indexMapping, err := buildIndexMapping()
-		if err != nil {
-			log.Fatal(err)
-		}
-		//venmurasuIndex, err = bleve.New(*indexPath, indexMapping)
-		venmurasuIndex, err := bleve.NewUsing(*indexPath, indexMapping, scorch.Name, scorch.Name, map[string]interface{}{
-			"forceSegmentType":    "zap",
-			"forceSegmentVersion": 12,
-		})
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// index data in the background
-		go func() {
-			err = indexVenmurasu(venmurasuIndex)
-			if err != nil {
-				log.Fatal(err)
-			}
-			pprof.StopCPUProfile()
-			if *memprofile != "" {
-				f, err := os.Create(*memprofile)
-				if err != nil {
-					log.Fatal(err)
-				}
-				pprof.WriteHeapProfile(f)
-				f.Close()
-			}
-		}()
-	} else if err != nil {
+	// exit on index doesn't exists.
+	if err ==  bleve.ErrorIndexPathDoesNotExist {
+		log.Printf("Error in index path does not exists. Generate the index first.")
 		log.Fatal(err)
-	} else {
-		log.Printf("Opening existing index...")
 	}
+
+	log.Printf("Opening existing index...")
 
 	// create a router to serve static files
 
 	// workDir, _ := os.Getwd()
 	// filesDir := http.Dir(filepath.Join(workDir, "static"))
 
-	FileServer(r, "/static", "./static/")
+	FileServer(r, "/static", *staticPath)
 	//FileServer(r, "/static", "./static/")
 	//FileServer(r, "/", "/static/")
 
@@ -133,11 +85,9 @@ func main() {
 
 	// start the HTTP server
 	// http.Handle("/", router)
-	// log.Printf("Listening on %v", *bindAddr)
-	// log.Fatal(http.ListenAndServe(*bindAddr, nil))
 
-	log.Printf("Listening on %s", ":8094")
-	http.ListenAndServe(":8094", r)
+	log.Printf("Listening on %s", *bindAddr)
+	http.ListenAndServe(*bindAddr, r)
 }
 
 // func Search(w http.ResponseWriter, r *http.Request) {
@@ -295,71 +245,6 @@ func searchParams(next http.Handler) http.Handler {
 		// the page number, or the limit, and send a query cursor down the chain
 		next.ServeHTTP(w, r)
 	})
-}
-
-func indexVenmurasu(i bleve.Index) error {
-
-	// open the directory
-	dirEntries, err := ioutil.ReadDir(*jsonDir)
-	if err != nil {
-		return err
-	}
-
-	// walk the directory entries for indexing
-	log.Printf("Indexing...")
-	count := 0
-	startTime := time.Now()
-	batch := i.NewBatch()
-	batchCount := 0
-	for _, dirEntry := range dirEntries {
-		filename := dirEntry.Name()
-
-		// read the bytes
-		jsonBytes, err := ioutil.ReadFile(*jsonDir + "/" + filename)
-		if err != nil {
-			return err
-		}
-		// parse bytes as json
-		var jsonDoc interface{}
-		err = json.Unmarshal(jsonBytes, &jsonDoc)
-		if err != nil {
-			return err
-		}
-
-		ext := filepath.Ext(filename)
-		docID := filename[:(len(filename) - len(ext))]
-		fmt.Println("Indexing docid==>", docID)
-		batch.Index(docID, jsonDoc)
-		batchCount++
-
-		if batchCount >= *batchSize {
-			err = i.Batch(batch)
-			if err != nil {
-				return err
-			}
-			batch = i.NewBatch()
-			batchCount = 0
-		}
-		count++
-		if count%10 == 0 {
-			indexDuration := time.Since(startTime)
-			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-			timePerDoc := float64(indexDuration) / float64(count)
-			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
-		}
-	}
-	// flush the last batch
-	if batchCount > 0 {
-		err = i.Batch(batch)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	indexDuration := time.Since(startTime)
-	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-	timePerDoc := float64(indexDuration) / float64(count)
-	log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", count, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
-	return nil
 }
 
 func FileServer(r chi.Router, public string, static string) {

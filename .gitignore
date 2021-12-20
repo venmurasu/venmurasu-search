@@ -7,7 +7,5 @@
 .DS_Store
 .makefiles
 venmurasu-search
+vensearch.bleve
 /bin
-/vensearch.bleve/store
-vensearch.bleve/store
-vensearch.bleve/store/root.bolt
