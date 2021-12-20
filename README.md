@@ -13,6 +13,13 @@ Install Go using [the instructions](https://golang.org/doc/install). This applic
 
 After installing Go, Then clone this repo.
 
+```
+git config --global submodule.recurse true
+git clone git@github.com:venmurasu/venmurasu-search.git
+cd venmurasu-search
+git submodule update --init --recursive
+```
+
 ### To generate bleve index
 
 To generate bleve index file from the venmurasu json directory.
