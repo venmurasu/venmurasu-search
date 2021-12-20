@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzer/custom"
-	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/analysis/lang/ta"
-	"github.com/blevesearch/bleve/analysis/tokenizer/unicode"
-	"github.com/blevesearch/bleve/mapping"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
+	"github.com/blevesearch/bleve/v2/analysis/lang/ta"
+	"github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
+	"github.com/blevesearch/bleve/v2/mapping"
 )
 
 // "bookno": 1,
@@ -50,7 +50,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 			"tokenizer": unicode.Name,
 			"token_filters": []interface{}{
 				ta.StopName,
-				ta.SnowballStemmerName,
+				ta.StemmerName,
 				`normalize_in`,
 			},
 		})

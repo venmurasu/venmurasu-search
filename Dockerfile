@@ -5,7 +5,7 @@
 # You may obtain a copy of the License at
 #
 #    https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ RUN go mod download
 COPY . ./
 
 # Build the binary.
-RUN go build -v -o server
+RUN make
 
 # Use the official Debian slim image for a lean production container.
 # https://hub.docker.com/_/debian
@@ -42,9 +42,8 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 
 # Copy the binary to the production image from the builder stage.
 WORKDIR /app
-COPY --from=builder /app/server /app/server
-COPY ./vensearch.bleve /app/vensearch.bleve
-
+COPY --from=builder /app/bin/server /app/server
+COPY --from=builder /app/static /app/static
 
 # Run the web service on container startup.
-CMD ["/app/server"]
+ENTRYPOINT ["/app/server"]

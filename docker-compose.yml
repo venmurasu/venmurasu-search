@@ -1,0 +1,12 @@
+version: '2.4'
+
+services:
+
+  search:
+    build: .
+    image: vpt/search:dev
+    ports:
+      - 8084
+    volumes:
+      - ./vensearch.bleve:/index
+    command: -addr 0.0.0.0:8084 -index /index -static /app/static
