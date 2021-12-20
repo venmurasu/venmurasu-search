@@ -28,7 +28,7 @@ To generate bleve index file from the venmurasu json directory.
 make genindex
 ```
 
-The index directory is required to run the search web server.
+This generated index directory is required to run the search web server.
 
 ### To build binary
 
@@ -49,7 +49,7 @@ start the app from
 ```
 make run
 ```
-First run should build the index and start the app and is accessible from `http://localhost:8094`
+Before this, build the index. Then the app is accessible from `http://localhost:8094`
 
 ### To run as docker
 
