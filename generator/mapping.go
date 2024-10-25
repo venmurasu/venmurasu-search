@@ -50,7 +50,7 @@ func buildIndexMapping() (mapping.IndexMapping, error) {
 			"tokenizer": unicode.Name,
 			"token_filters": []interface{}{
 				ta.StopName,
-				ta.StemmerName,
+				ta.SnowballStemmerName,
 				`normalize_in`,
 			},
 		})
